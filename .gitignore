@@ -1,0 +1,10 @@
+# .gitignore for Java Maven project
+target/
+!.mvn/wrapper/maven-wrapper.jar
+**/target/surefire-reports/
+.idea/
+*.iml
+*.log
+.DS_Store
+Thumbs.db
+
