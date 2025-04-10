@@ -1,0 +1,44 @@
+{
+  "requestTrace": "8ca3a493-136e-43e6-9433-f44908f394d4",
+  "requestDateTime": "2025-03-28T00:26:51.165Z",
+  "requestParameters": {
+    "data": {
+      "sourceAccountNumber": "80061959",
+      "transaction": {
+        "transactionTraceNumber": "nunu0012",
+        "transactionType": "CITAD",
+        "beneficiary": {
+          "citad": {
+            "bank": {
+              "citadCode": "01201001"
+            },
+            "target": {
+              "account": {
+                "accountNumber": "1015699329",
+                "beneficiaryName": "NGUYEN VAN C"
+              }
+            }
+          }
+        },
+        "amount": {
+          "sourceCurrency": "VND",
+          "targetCurrency": "VND",
+          "amount": "200000",
+          "exchangeRate": "1",
+          "exchangeAmount": "200000"
+        },
+        "remarks": "Chi don "
+      }
+    },
+    "authorizations": [
+      {
+        "authorizationString": "",
+        "authorizationId": "1526fa6a-4388-4234-99e5-846ba2c6e328"
+      },
+      {
+        "authorizationString": "",
+        "authorizationId": "72d9c963-4a20-40f3-bef1-9b773369826b"
+      }
+    ]
+  }
+}

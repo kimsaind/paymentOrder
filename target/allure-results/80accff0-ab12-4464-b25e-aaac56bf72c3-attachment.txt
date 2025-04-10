@@ -1,0 +1,41 @@
+{
+  "requestTrace" : "59800b51-a6a0-4c6e-b7ad-92612a21824a",
+  "requestDateTime" : "2025-04-10T17:46:36.013654+07:00",
+  "requestParameters" : {
+    "data" : {
+      "sourceAccountNumber" : "80061959",
+      "transaction" : {
+        "transactionTraceNumber" : "TRACE1744281996013311",
+        "transactionType" : "CITAD",
+        "beneficiary" : {
+          "citad" : {
+            "bank" : {
+              "citadCode" : "01201001"
+            },
+            "target" : {
+              "account" : {
+                "accountNumber" : "1015699329",
+                "beneficiaryName" : "NGUYEN VAN C"
+              }
+            }
+          }
+        },
+        "amount" : {
+          "sourceCurrency" : "VND",
+          "targetCurrency" : "VND",
+          "amount" : "200000",
+          "exchangeRate" : "1",
+          "exchangeAmount" : "200000"
+        },
+        "remarks" : "Chi don "
+      }
+    },
+    "authorizations" : [ {
+      "authorizationString" : "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",
+      "authorizationId" : "1526fa6a-4388-4234-99e5-846ba2c6e328"
+    }, {
+      "authorizationString" : "",
+      "authorizationId" : "72d9c963-4a20-40f3-bef1-9b773369826b"
+    } ]
+  }
+}

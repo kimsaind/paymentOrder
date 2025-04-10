@@ -1,0 +1,42 @@
+{
+    "responseDateTime": "2025-04-10T17:46:29+07:00",
+    "responseStatus": {
+        "responseCode": "00000000",
+        "responseMessage": "success"
+    },
+    "responseData": {
+        "transactions": [
+            {
+                "transactionTraceNumber": "TRACE174428198363462",
+                "status": "ORIG",
+                "statusMessage": null,
+                "serviceChargeAmount": null,
+                "sourceAcocuntNumber": "80061959",
+                "transactionNumber": null,
+                "amount": {
+                    "sourceCurrency": "VND",
+                    "targetCurrency": "VND",
+                    "amount": "200000",
+                    "exchangeRate": "1",
+                    "exchangeAmount": "200000"
+                },
+                "remarks": "Chi don",
+                "transactionType": "INSIDEBANK",
+                "beneficiary": {
+                    "inside": {
+                        "account": {
+                            "accountNumber": "A46A46P100211",
+                            "beneficiaryName": "ADAM 25193"
+                        }
+                    }
+                }
+            }
+        ],
+        "pagination": {
+            "totalRows": 1,
+            "totalPages": 1,
+            "page": 1,
+            "size": 20
+        }
+    }
+}

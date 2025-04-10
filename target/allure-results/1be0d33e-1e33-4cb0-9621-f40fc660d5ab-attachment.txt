@@ -1,0 +1,16 @@
+{
+    "requestTrace": "482589f3-4796-4620-a2b8-c980e2cc00bb",
+    "responseDateTime": "2025-04-10T17:46:24+07:00",
+    "responseStatus": {
+        "responseCode": "00000000",
+        "responseMessage": "success"
+    },
+    "responseData": {
+        "transaction": {
+            "transactionTraceNumber": "TRACE174428198363462",
+            "status": "ORIG",
+            "statusMessage": "Waiting for processed",
+            "createdDateTime": "2025-04-10T10:46:23.000Z"
+        }
+    }
+}

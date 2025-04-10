@@ -1,0 +1,65 @@
+[
+  {
+    "testCaseId": "TC_001",
+    "description": "Check requestTrace with valid payment",
+    "requestTemplateKey": "inside",
+    "expectedStatusCode": 200,
+    "expectedField": "requestTrace",
+    "expectedValue": null,
+    "tags": ["positive", "smoke"],
+    "testName": "Verify_requestTrace_validPayment",
+    "apiType": "POST_PAYMENT"
+  },
+  {
+    "testCaseId": "TC_002",
+    "description": "Check transaction history with valid trace number",
+    "transactionTraceNumber": "trace00020",
+    "fromDate": "2025-04-10",
+    "toDate": "2025-04-10",
+    "expectedStatusCode": 200,
+    "expectedField": "responseData.transactions[0].transactionTraceNumber",
+    "expectedValue": null,
+    "tags": ["positive", "history"],
+    "testName": "Verify_transactionHistory_validTrace",
+    "apiType": "GET_TRANSACTION"
+  },
+  {
+    "testCaseId": "TC_003",
+    "description": "Create INSIDE payment order and query transaction history with generated trace",
+    "requestTemplateKey": "inside",
+    "fromDate": "2025-04-10",
+    "toDate": "2025-04-10",
+    "expectedStatusCode": 200,
+    "expectedField": "responseData.transactions[0].transactionTraceNumber",
+    "expectedValue": null,
+    "tags": ["positive", "payment", "history"],
+    "testName": "Create_and_query_transaction_trace",
+    "apiType": "CREATE_AND_QUERY"
+  },
+  {
+    "testCaseId": "TC_004",
+    "description": "Create IBFT payment order and query transaction history with generated trace",
+    "requestTemplateKey": "ibft",
+    "fromDate": "2025-04-10",
+    "toDate": "2025-04-10",
+    "expectedStatusCode": 200,
+    "expectedField": "responseData.transactions[0].transactionTraceNumber",
+    "expectedValue": null,
+    "tags": ["positive", "payment", "history", "ibft"],
+    "testName": "Create_and_query_ibft_transaction_trace",
+    "apiType": "CREATE_AND_QUERY"
+  },
+  {
+    "testCaseId": "TC_005",
+    "description": "Create CITAD payment order and query transaction history with generated trace",
+    "requestTemplateKey": "citad",
+    "fromDate": "2025-04-10",
+    "toDate": "2025-04-10",
+    "expectedStatusCode": 200,
+    "expectedField": "responseData.transactions[0].transactionTraceNumber",
+    "expectedValue": null,
+    "tags": ["positive", "payment", "history", "citad"],
+    "testName": "Create_and_query_citad_transaction_trace",
+    "apiType": "CREATE_AND_QUERY"
+  }
+]
