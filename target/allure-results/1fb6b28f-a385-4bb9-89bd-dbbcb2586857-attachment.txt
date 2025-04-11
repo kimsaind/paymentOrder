@@ -1,1 +1,0 @@
-https://sandbox.acb.com.vn/acb/open/payments/payment-order/v2/transaction
