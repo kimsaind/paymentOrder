@@ -16,14 +16,11 @@ public class BulkTransactionQueryAPI {
                 .header("Authorization", "Bearer " + token)
                 .header("X-Channel", "SOBA")
                 .header("X-Client-ID", APIConfig.CLIENT_ID)
-                .header("X-Provider-ID", "BULK-TRANSACTION")
+                .header("X-Provider-ID", "PIKA")
                 .header("X-Request-ID", java.util.UUID.randomUUID().toString())
                 .queryParam("bulkTraceNumber", bulkTraceNumber)
                 .queryParam("fromDate", fromDate)
                 .queryParam("toDate", toDate);
-//           // Thêm các query parameters bổ sung (giả định API yêu cầu)
-////                .queryParam("channel", "SOBA") // Thêm channel nếu API yêu cầu
-//                .queryParam("providerId", "BULK-TRANSACTION"); // Thêm providerId nếu API yêu cầu
 
         // Log request
         LoggerUtil.info("Sending Bulk Transaction History Request to: {}", BULK_TRANSACTION_HISTORY_ENDPOINT);

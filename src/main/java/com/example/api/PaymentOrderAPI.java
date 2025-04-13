@@ -7,9 +7,6 @@ import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 
-import java.io.FileInputStream;
-import java.security.KeyStore;
-
 public class PaymentOrderAPI {
     private static final String BASE_URL = "https://sandbox.acb.com.vn/acb/open/payments/payment-order/v2/transaction";
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -21,7 +18,7 @@ public class PaymentOrderAPI {
                 .header("Authorization", "Bearer " + token)
                 .header("X-Channel", "SOBA")
                 .header("X-Client-ID", "2f4e1379addb2c6f059d53f622b6bf80")
-                .header("X-Provider-ID", "PAYMENT-ORDER")
+                .header("X-Provider-ID", "PIKA")
                 .header("X-Request-ID", java.util.UUID.randomUUID().toString())
                 .contentType("application/json")
                 .body(mapper.writeValueAsString(requestBody));

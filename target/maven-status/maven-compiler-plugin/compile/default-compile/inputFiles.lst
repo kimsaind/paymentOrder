@@ -2,6 +2,8 @@
 /Users/kimphung/PaymentOrderAPI/src/main/java/com/example/api/TokenAPI.java
 /Users/kimphung/PaymentOrderAPI/src/main/java/com/example/utils/LoggerUtil.java
 /Users/kimphung/PaymentOrderAPI/src/main/java/com/example/api/TransactionTraceAPI.java
+/Users/kimphung/PaymentOrderAPI/src/main/java/com/example/api/BulkTransactionCreateAPI.java
+/Users/kimphung/PaymentOrderAPI/src/main/java/com/example/api/BulkTransactionQueryAPI.java
 /Users/kimphung/PaymentOrderAPI/src/main/java/com/example/utils/FileUtil.java
 /Users/kimphung/PaymentOrderAPI/src/main/java/com/example/TestCase.java
 /Users/kimphung/PaymentOrderAPI/src/main/java/com/example/utils/SignatureUtil.java

@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 
+
 public class TransactionTraceAPI {
     public static Response getTransactionHistory(String token, String transactionTraceNumber, String fromDate, String toDate) {
         String endpoint = APIConfig.PAYMENT_ENDPOINT + "?transactionTraceNumber=" + transactionTraceNumber +
@@ -28,7 +29,7 @@ public class TransactionTraceAPI {
         Response response = given()
                 .header("X-Channel", "SOBA")
                 .header("X-Client-ID", APIConfig.CLIENT_ID)
-                .header("X-Provider-ID", "PAYMENT-ORDER")
+                .header("X-Provider-ID", "PIKA")
                 .header("X-Request-ID", requestId)
                 .header("Authorization", "Bearer " + token)
                 .contentType("application/json")

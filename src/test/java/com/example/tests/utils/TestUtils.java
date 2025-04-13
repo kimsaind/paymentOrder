@@ -72,8 +72,22 @@ public class TestUtils {
         return traceNumber;
     }
 
+    @Step("Generate bulk trace number for bulk transaction")
+    public static String generateBulkTraceNumber(ObjectNode dynamicRequest, Map<String, String> dynamicValues) {
+        String bulkTraceNumber = "pika" + generateRandomString(10);
+        ((ObjectNode) dynamicRequest.path("requestParameters").path("data"))
+                .put("bulkTraceNumber", bulkTraceNumber);
+        dynamicValues.put("requestParameters.data.bulkTraceNumber", bulkTraceNumber);
+        LoggerUtil.info("Generated bulkTraceNumber: {}", bulkTraceNumber);
+        Allure.addAttachment("Generated bulkTraceNumber", bulkTraceNumber);
+        return bulkTraceNumber;
+    }
+
     @Step("Update transactions with dynamic trace numbers")
     public static void updateTransactions(ObjectNode dynamicRequest, Map<String, String> dynamicValues) {
+        // Tạo bulkTraceNumber trước khi cập nhật transactions
+        generateBulkTraceNumber(dynamicRequest, dynamicValues);
+
         dynamicRequest.path("requestParameters").path("data").path("transactions").forEach(transaction -> {
             String transactionType = transaction.path("transactionType").asText();
             LoggerUtil.info("Processing transaction with transactionType: {}", transactionType);

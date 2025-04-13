@@ -1,1 +1,8 @@
+/Users/kimphung/PaymentOrderAPI/src/test/java/com/example/tests/handlers/GetBulkTransactionHandler.java
 /Users/kimphung/PaymentOrderAPI/src/test/java/com/example/tests/APITests.java
+/Users/kimphung/PaymentOrderAPI/src/test/java/com/example/tests/handlers/GetTransactionHandler.java
+/Users/kimphung/PaymentOrderAPI/src/test/java/com/example/tests/handlers/CreateAndQueryHandler.java
+/Users/kimphung/PaymentOrderAPI/src/test/java/com/example/tests/handlers/ApiTestHandler.java
+/Users/kimphung/PaymentOrderAPI/src/test/java/com/example/tests/handlers/CreateAndQueryBulkHandler.java
+/Users/kimphung/PaymentOrderAPI/src/test/java/com/example/tests/handlers/BulkTransactionHandler.java
+/Users/kimphung/PaymentOrderAPI/src/test/java/com/example/tests/utils/TestUtils.java

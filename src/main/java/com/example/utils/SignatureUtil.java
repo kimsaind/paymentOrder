@@ -39,10 +39,27 @@ public class SignatureUtil {
     }
 
     public static String generateAuthorizationString(Object requestBody, String authorizationId) throws Exception {
+        if (requestBody == null) {
+            throw new IllegalArgumentException("requestBody cannot be null");
+        }
+
         JsonNode rootNode = mapper.valueToTree(requestBody);
         JsonNode requestParameters = rootNode.path("requestParameters");
+        if (requestParameters.isMissingNode()) {
+            throw new IllegalArgumentException("requestParameters is missing in requestBody");
+        }
+
         JsonNode data = requestParameters.path("data");
-        String plainText = hashDataWithSha256(data.toString());
+        if (data.isMissingNode()) {
+            throw new IllegalArgumentException("data is missing in requestParameters");
+        }
+
+        String dataString = data.toString();
+        if (dataString == null || dataString.trim().isEmpty()) {
+            throw new IllegalArgumentException("data.toString() is null or empty");
+        }
+
+        String plainText = hashDataWithSha256(dataString);
 
         if (AUTH_ID_A.equals(authorizationId)) {
             return signData(plainText, P12_FILE_A, P12_PASSWORD_A);
@@ -55,6 +72,9 @@ public class SignatureUtil {
 
     private static String hashDataWithSha256(String input) {
         try {
+            if (input == null) {
+                throw new IllegalArgumentException("Input for hashDataWithSha256 cannot be null");
+            }
             String encBase64 = Base64.getEncoder().encodeToString(input.getBytes(StandardCharsets.UTF_8));
             LoggerUtil.info("Base64 Data: {}", encBase64);
             String hexData = SHA256(encBase64);
@@ -68,6 +88,9 @@ public class SignatureUtil {
 
     private static String SHA256(String input) {
         try {
+            if (input == null) {
+                throw new IllegalArgumentException("Input for SHA256 cannot be null");
+            }
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hashBytes = digest.digest(input.getBytes());
             StringBuilder hexString = new StringBuilder();
@@ -87,6 +110,9 @@ public class SignatureUtil {
 
     private static String signData(String plainText, String p12FilePath, String password) {
         try {
+            if (plainText == null) {
+                throw new IllegalArgumentException("plainText cannot be null");
+            }
             InputStream p12Stream = SignatureUtil.class.getClassLoader().getResourceAsStream(p12FilePath);
             if (p12Stream == null) {
                 throw new IllegalArgumentException("Cannot find P12 file at: " + p12FilePath);
@@ -120,6 +146,9 @@ public class SignatureUtil {
 
     private static String sign(String plainText, PrivateKey privateKey, X509Certificate certificate) {
         try {
+            if (plainText == null) {
+                throw new IllegalArgumentException("plainText cannot be null in sign method");
+            }
             byte[] dataToSign = plainText.getBytes(StandardCharsets.UTF_16LE);
             List<Object> certList = new ArrayList<>();
             certList.add(certificate);

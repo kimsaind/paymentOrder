@@ -35,11 +35,8 @@ public class BulkTransactionHandler implements ApiTestHandler {
         String requestTemplateKey = (String) testCase.get("requestTemplateKey");
         ObjectNode dynamicRequest = TestUtils.createDynamicRequest(requestTemplateKey, dynamicValues);
 
-        // Tạo bulkTraceNumber động
-        String bulkTraceNumber = "pika" + TestUtils.generateRandomString(10);
-        ((ObjectNode) dynamicRequest.path("requestParameters").path("data"))
-                .put("bulkTraceNumber", bulkTraceNumber);
-        dynamicValues.put("requestParameters.data.bulkTraceNumber", bulkTraceNumber);
+        // Sử dụng TestUtils.generateBulkTraceNumber để đồng bộ
+        String bulkTraceNumber = TestUtils.generateBulkTraceNumber(dynamicRequest, dynamicValues);
 
         TestUtils.updateTransactions(dynamicRequest, dynamicValues);
         TestUtils.updateRequestBody(dynamicRequest);

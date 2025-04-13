@@ -1,8 +1,9 @@
 package com.example.tests;
 
-import com.example.api.PaymentOrderAPI;
-import com.example.api.TokenAPI;
-import com.example.api.TransactionTraceAPI;
+import com.example.api.*;
+import com.example.tests.handlers.BulkTransactionHandler;
+import com.example.tests.handlers.CreateAndQueryBulkHandler;
+import com.example.tests.utils.TestUtils;
 import com.example.utils.FileUtil;
 import com.example.utils.LoggerUtil;
 import com.example.utils.SignatureUtil;
@@ -13,12 +14,9 @@ import io.restassured.response.Response;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -28,6 +26,8 @@ public class APITests {
     private static final Map<String, Response> responseCache = new HashMap<>();
     private static final String token = TokenAPI.getAccessToken();
     private static final ObjectMapper mapper = new ObjectMapper();
+    private final CreateAndQueryBulkHandler bulkQueryHandler = new CreateAndQueryBulkHandler(mapper);
+    private final BulkTransactionHandler bulkHandler = new BulkTransactionHandler(mapper);
 
     @TestFactory
     public List<DynamicTest> testAllPaymentOrders() throws Exception {
@@ -62,6 +62,8 @@ public class APITests {
                 String expectedValue = (String) tc.get("expectedValue");
                 String apiType = (String) tc.get("apiType");
 
+                // Thêm log để kiểm tra apiType
+                LoggerUtil.info("Processing test case {} with apiType: {}", tc.get("testCaseId"), apiType);
                 Allure.step("Test Case ID: " + tc.get("testCaseId"));
                 Allure.step("Description: " + tc.get("description"));
 
@@ -69,62 +71,46 @@ public class APITests {
                 Response response;
 
                 if ("CREATE_AND_QUERY".equals(apiType)) {
-                    // Bước 1: Tạo payment order
-                    Object requestBody = FileUtil.getRequestTemplate(requestTemplateKey);
-                    ObjectNode dynamicRequest = mapper.valueToTree(requestBody).deepCopy();
-
-                    String dynamicRequestTrace = UUID.randomUUID().toString();
-                    dynamicRequest.put("requestTrace", dynamicRequestTrace);
-                    dynamicValues.put("requestTrace", dynamicRequestTrace);
-
-                    String dynamicTimestamp = OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
-                    dynamicRequest.put("requestDateTime", dynamicTimestamp);
-                    dynamicValues.put("requestDateTime", dynamicTimestamp);
-
-                    String traceNumber = "TRACE" + System.currentTimeMillis() + (int) (Math.random() * 1000);
-                    ((ObjectNode) dynamicRequest.path("requestParameters").path("data").path("transaction"))
-                            .put("transactionTraceNumber", traceNumber);
-                    dynamicValues.put("requestParameters.data.transaction.transactionTraceNumber", traceNumber);
-
-                    // Sửa request body và tạo authorizationString
+                    ObjectNode dynamicRequest = TestUtils.createDynamicRequest(requestTemplateKey, dynamicValues);
+                    String traceNumber = TestUtils.generateTraceNumber(dynamicRequest, dynamicValues);
                     updateRequestBody(dynamicRequest);
 
-                    Allure.addAttachment("Dynamic requestTrace", dynamicRequestTrace);
-                    Allure.addAttachment("Dynamic requestDateTime", dynamicTimestamp);
+                    Allure.addAttachment("Dynamic requestTrace", dynamicValues.get("requestTrace"));
+                    Allure.addAttachment("Dynamic requestDateTime", dynamicValues.get("requestDateTime"));
                     Allure.addAttachment("Dynamic transactionTraceNumber", traceNumber);
 
                     Allure.step("Step 1: Sending create payment order request");
-                    LoggerUtil.info("Sending Payment Order Request Body: \n{}", dynamicRequest.toPrettyString());
-                    Allure.addAttachment("Payment Order Request Body", "application/json", dynamicRequest.toPrettyString());
-                    Response createResponse = PaymentOrderAPI.createPaymentOrder(token, dynamicRequest);
-                    LoggerUtil.info("Payment Order Response - Status Code: {}", createResponse.getStatusCode());
-                    LoggerUtil.info("Payment Order Response - Headers: {}", createResponse.getHeaders());
-                    LoggerUtil.info("Payment Order Response - Body: \n{}", createResponse.getBody().asPrettyString());
-                    Allure.addAttachment("Payment Order Response - Status Code", String.valueOf(createResponse.getStatusCode()));
-                    Allure.addAttachment("Payment Order Response - Headers", createResponse.getHeaders().toString());
-                    Allure.addAttachment("Payment Order Response - Body", "application/json", createResponse.getBody().asPrettyString());
+                    response = TestUtils.callApiAndLogResponse(
+                            "Step 1: Sending create payment order request",
+                            dynamicRequest.toPrettyString(),
+                            PaymentOrderAPI.createPaymentOrder(token, dynamicRequest)
+                    );
 
-                    createResponse.then().statusCode(200);  // Kiểm tra POST thành công
+                    response.then().statusCode(200);
 
-                    // Validate status là ORIG
-                    String status = createResponse.jsonPath().getString("responseData.transaction.status");
+                    String status = response.jsonPath().getString("responseData.transaction.status");
                     assertThat("Payment order status should be ORIG", status, equalTo("ORIG"));
 
-                    // Lấy transactionTraceNumber từ response
-                    String createdTraceNumber = createResponse.jsonPath()
+                    String createdTraceNumber = response.jsonPath()
                             .getString("responseData.transaction.transactionTraceNumber");
                     if (createdTraceNumber == null) {
                         throw new RuntimeException("transactionTraceNumber not found in create payment order response");
                     }
                     Allure.addAttachment("Created transactionTraceNumber", createdTraceNumber);
 
-                    // Chờ 5 giây trước khi truy vấn
-                    Allure.step("Waiting 5 seconds before querying transaction history");
-                    Thread.sleep(5000);
+                    Allure.step("Waiting 10 seconds before querying transaction history");
+                    Thread.sleep(10000);
 
-                    // Bước 2: Truy vấn transaction history
                     String fromDate = (String) tc.get("fromDate");
                     String toDate = (String) tc.get("toDate");
+                    if (fromDate == null || fromDate.trim().isEmpty()) {
+                        fromDate = TestUtils.getDefaultFromDate();
+                        LoggerUtil.info("fromDate not specified in test case, using current date: {}", fromDate);
+                    }
+                    if (toDate == null || toDate.trim().isEmpty()) {
+                        toDate = TestUtils.getDefaultToDate();
+                        LoggerUtil.info("toDate not specified in test case, using current date: {}", toDate);
+                    }
 
                     dynamicValues.put("transactionTraceNumber", createdTraceNumber);
                     Allure.addAttachment("Query transactionTraceNumber", createdTraceNumber);
@@ -132,86 +118,122 @@ public class APITests {
                     Allure.addAttachment("Query toDate", toDate);
 
                     Allure.step("Step 2: Querying transaction history with created trace");
-                    LoggerUtil.info("Sending Transaction History Request - transactionTraceNumber: {}, fromDate: {}, toDate: {}",
-                            createdTraceNumber, fromDate, toDate);
-                    LoggerUtil.info("Transaction History Request Body: None (GET request)");
-                    Allure.addAttachment("Transaction History Request - Query Params",
-                            "transactionTraceNumber: " + createdTraceNumber + "\nfromDate: " + fromDate + "\ntoDate: " + toDate);
-                    Allure.addAttachment("Transaction History Request Body", "None (GET request)");
-                    response = TransactionTraceAPI.getTransactionHistory(token, createdTraceNumber, fromDate, toDate);
-                    LoggerUtil.info("Transaction History Response - Status Code: {}", response.getStatusCode());
-                    LoggerUtil.info("Transaction History Response - Headers: {}", response.getHeaders());
-                    LoggerUtil.info("Transaction History Response - Body: \n{}", response.getBody().asPrettyString());
-                    Allure.addAttachment("Transaction History Response - Status Code", String.valueOf(response.getStatusCode()));
-                    Allure.addAttachment("Transaction History Response - Headers", response.getHeaders().toString());
-                    Allure.addAttachment("Transaction History Response - Body", "application/json", response.getBody().asPrettyString());
+                    response = TestUtils.callApiAndLogResponse(
+                            "Step 2: Querying transaction history with created trace",
+                            "None (GET request)",
+                            TransactionTraceAPI.getTransactionHistory(token, createdTraceNumber, fromDate, toDate)
+                    );
 
-                    response.then().statusCode(200);  // Kiểm tra GET thành công
+                    response.then().statusCode(200);
 
-                    // Validate status là TRAN trong response GET
+                    List<Map<String, Object>> transactions = response.jsonPath().getList("responseData.transactions");
+                    if (transactions == null || transactions.isEmpty()) {
+                        throw new RuntimeException("No transactions found in history for traceNumber: " + createdTraceNumber);
+                    }
+
                     String queryStatus = response.jsonPath().getString("responseData.transactions[0].status");
                     assertThat("Transaction history status should be TRAN", queryStatus, equalTo("TRAN"));
+                } else if ("CREATE_AND_QUERY_BULK".equals(apiType)) {
+                    LoggerUtil.info("Executing CREATE_AND_QUERY_BULK for test case: {}", tc.get("testCaseId"));
+                    response = bulkQueryHandler.execute(tc, dynamicValues);
+                    bulkQueryHandler.validateResponse(response, tc);
+                    return;
+                } else if ("BULK_TRANSACTION".equals(apiType)) {
+                    response = bulkHandler.execute(tc, dynamicValues);
+                    bulkHandler.validateResponse(response, tc);
+                    return;
                 } else if ("GET_TRANSACTION".equals(apiType)) {
                     String transactionTraceNumber = (String) tc.get("transactionTraceNumber");
                     String fromDate = (String) tc.get("fromDate");
                     String toDate = (String) tc.get("toDate");
+                    if (fromDate == null || fromDate.trim().isEmpty()) {
+                        fromDate = TestUtils.getDefaultFromDate();
+                        LoggerUtil.info("fromDate not specified in test case, using current date: {}", fromDate);
+                    }
+                    if (toDate == null || toDate.trim().isEmpty()) {
+                        toDate = TestUtils.getDefaultToDate();
+                        LoggerUtil.info("toDate not specified in test case, using current date: {}", toDate);
+                    }
 
                     dynamicValues.put("transactionTraceNumber", transactionTraceNumber);
                     Allure.addAttachment("Dynamic transactionTraceNumber", transactionTraceNumber);
                     Allure.addAttachment("Dynamic fromDate", fromDate);
                     Allure.addAttachment("Dynamic toDate", toDate);
 
-                    LoggerUtil.info("Sending Transaction History Request - transactionTraceNumber: {}, fromDate: {}, toDate: {}",
-                            transactionTraceNumber, fromDate, toDate);
-                    LoggerUtil.info("Transaction History Request Body: None (GET request)");
-                    Allure.addAttachment("Transaction History Request - Query Params",
-                            "transactionTraceNumber: " + transactionTraceNumber + "\nfromDate: " + fromDate + "\ntoDate: " + toDate);
-                    Allure.addAttachment("Transaction History Request Body", "None (GET request)");
-                    response = TransactionTraceAPI.getTransactionHistory(token, transactionTraceNumber, fromDate, toDate);
-                    LoggerUtil.info("Transaction History Response - Status Code: {}", response.getStatusCode());
-                    LoggerUtil.info("Transaction History Response - Headers: {}", response.getHeaders());
-                    LoggerUtil.info("Transaction History Response - Body: \n{}", response.getBody().asPrettyString());
-                    Allure.addAttachment("Transaction History Response - Status Code", String.valueOf(response.getStatusCode()));
-                    Allure.addAttachment("Transaction History Response - Headers", response.getHeaders().toString());
-                    Allure.addAttachment("Transaction History Response - Body", "application/json", response.getBody().asPrettyString());
+                    response = TestUtils.callApiAndLogResponse(
+                            "Sending transaction history request",
+                            "None (GET request)",
+                            TransactionTraceAPI.getTransactionHistory(token, transactionTraceNumber, fromDate, toDate)
+                    );
+                } else if ("GET_BULK_TRANSACTION".equals(apiType)) {
+                    String bulkTraceNumber = (String) tc.get("bulkTraceNumber");
+                    if (bulkTraceNumber == null || bulkTraceNumber.trim().isEmpty()) {
+                        throw new IllegalArgumentException("bulkTraceNumber is required for GET_BULK_TRANSACTION");
+                    }
+
+                    String fromDate = (String) tc.get("fromDate");
+                    String toDate = (String) tc.get("toDate");
+                    if (fromDate == null || fromDate.trim().isEmpty()) {
+                        fromDate = TestUtils.getDefaultFromDate();
+                        LoggerUtil.info("fromDate not specified in test case, using current date: {}", fromDate);
+                    }
+                    if (toDate == null || toDate.trim().isEmpty()) {
+                        toDate = TestUtils.getDefaultToDate();
+                        LoggerUtil.info("toDate not specified in test case, using current date: {}", toDate);
+                    }
+
+                    dynamicValues.put("bulkTraceNumber", bulkTraceNumber);
+                    Allure.addAttachment("Dynamic bulkTraceNumber", bulkTraceNumber);
+                    Allure.addAttachment("Dynamic fromDate", fromDate);
+                    Allure.addAttachment("Dynamic toDate", toDate);
+
+                    response = TestUtils.callApiAndLogResponse(
+                            "Sending bulk transaction query request",
+                            "None (GET request)",
+                            BulkTransactionQueryAPI.getBulkTransaction(token, bulkTraceNumber, fromDate, toDate)
+                    );
+
+                    List<Map<String, Object>> bulkTransactions = response.jsonPath().getList("responseData.bulkTransactions");
+                    if (bulkTransactions == null || bulkTransactions.isEmpty()) {
+                        throw new RuntimeException("No bulk transactions found in query response for bulkTraceNumber: " +
+                                bulkTraceNumber + " with fromDate: " + fromDate + " and toDate: " + toDate);
+                    }
+
+                    String bulkStatus = response.jsonPath().getString("responseData.bulkTransactions[0].bulkStatus");
+                    if (bulkStatus == null) {
+                        throw new RuntimeException("bulkStatus not found in query bulk transaction response");
+                    }
+                    assertThat("Bulk transaction status should be COMP", bulkStatus, equalTo("COMP"));
                 } else {
+                    if (requestTemplateKey == null || requestTemplateKey.trim().isEmpty()) {
+                        throw new IllegalArgumentException("requestTemplateKey is required for API type: " + apiType);
+                    }
                     response = responseCache.computeIfAbsent(requestTemplateKey + "_" + tc.get("testCaseId"), key -> {
                         try {
-                            Object requestBody = FileUtil.getRequestTemplate(requestTemplateKey);
-                            ObjectNode dynamicRequest = mapper.valueToTree(requestBody).deepCopy();
-
-                            String dynamicRequestTrace = UUID.randomUUID().toString();
-                            dynamicRequest.put("requestTrace", dynamicRequestTrace);
-                            dynamicValues.put("requestTrace", dynamicRequestTrace);
-
-                            String dynamicTimestamp = OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
-                            dynamicRequest.put("requestDateTime", dynamicTimestamp);
-                            dynamicValues.put("requestDateTime", dynamicTimestamp);
-
-                            String traceNumber = "TRACE" + System.currentTimeMillis() + (int) (Math.random() * 1000);
-                            ((ObjectNode) dynamicRequest.path("requestParameters").path("data").path("transaction"))
-                                    .put("transactionTraceNumber", traceNumber);
-                            dynamicValues.put("requestParameters.data.transaction.transactionTraceNumber", traceNumber);
-
-                            // Sửa request body và tạo authorizationString
-                            updateRequestBody(dynamicRequest);
-
-                            Allure.addAttachment("Dynamic requestTrace", dynamicRequestTrace);
-                            Allure.addAttachment("Dynamic requestDateTime", dynamicTimestamp);
-                            Allure.addAttachment("Dynamic transactionTraceNumber", traceNumber);
-
-                            Allure.step("Sending request for " + requestTemplateKey);
-                            LoggerUtil.info("Sending Payment Order Request Body: \n{}", dynamicRequest.toPrettyString());
-                            Allure.addAttachment("Payment Order Request Body", "application/json", dynamicRequest.toPrettyString());
-                            Response createResponse = PaymentOrderAPI.createPaymentOrder(token, dynamicRequest);
-                            LoggerUtil.info("Payment Order Response - Status Code: {}", createResponse.getStatusCode());
-                            LoggerUtil.info("Payment Order Response - Headers: {}", createResponse.getHeaders());
-                            LoggerUtil.info("Payment Order Response - Body: \n{}", createResponse.getBody().asPrettyString());
-                            Allure.addAttachment("Payment Order Response - Status Code", String.valueOf(createResponse.getStatusCode()));
-                            Allure.addAttachment("Payment Order Response - Headers", createResponse.getHeaders().toString());
-                            Allure.addAttachment("Payment Order Response - Body", "application/json", createResponse.getBody().asPrettyString());
-                            return createResponse;
+                            ObjectNode dynamicRequest = TestUtils.createDynamicRequest(requestTemplateKey, dynamicValues);
+                            boolean isBulkTransaction = dynamicRequest.path("requestParameters")
+                                    .path("data")
+                                    .has("transactions");
+                            if (isBulkTransaction) {
+                                LoggerUtil.info("Detected bulk transaction template: {}", requestTemplateKey);
+                                TestUtils.updateTransactions(dynamicRequest, dynamicValues);
+                                return TestUtils.callApiAndLogResponse(
+                                        "Sending bulk transaction request for " + requestTemplateKey,
+                                        dynamicRequest.toPrettyString(),
+                                        BulkTransactionCreateAPI.createBulkTransaction(token, dynamicRequest)
+                                );
+                            } else {
+                                LoggerUtil.info("Detected single transaction template: {}", requestTemplateKey);
+                                TestUtils.generateTraceNumber(dynamicRequest, dynamicValues);
+                                updateRequestBody(dynamicRequest);
+                                return TestUtils.callApiAndLogResponse(
+                                        "Sending request for " + requestTemplateKey,
+                                        dynamicRequest.toPrettyString(),
+                                        PaymentOrderAPI.createPaymentOrder(token, dynamicRequest)
+                                );
+                            }
                         } catch (Exception e) {
+                            LoggerUtil.error("Failed to send request for {}: {}", requestTemplateKey, e.getMessage(), e);
                             Allure.step("Failed to send request: " + e.getMessage(), io.qameta.allure.model.Status.FAILED);
                             throw new RuntimeException("Failed to send request for " + requestTemplateKey, e);
                         }
@@ -219,18 +241,7 @@ public class APITests {
                 }
 
                 response.then().statusCode(expectedStatusCode);
-
-                if (expectedField != null) {
-                    String actualValue = response.jsonPath().getString(expectedField);
-                    String dynamicValue = dynamicValues.get(expectedField);
-                    if (dynamicValue != null) {
-                        assertThat("Response " + expectedField + " should match request value",
-                                actualValue, equalTo(dynamicValue));
-                    } else if (expectedValue != null) {
-                        assertThat("Response " + expectedField + " should match expected value",
-                                actualValue, equalTo(expectedValue));
-                    }
-                }
+                TestUtils.validateExpectedField(response, tc, dynamicValues);
             });
         }).collect(Collectors.toList());
     }
@@ -239,7 +250,6 @@ public class APITests {
         ObjectNode requestParameters = (ObjectNode) dynamicRequest.get("requestParameters");
         ObjectNode data = (ObjectNode) requestParameters.get("data");
 
-        // Tạo authorizationString cho từng authorizationId
         requestParameters.get("authorizations").forEach(auth -> {
             String authorizationId = auth.get("authorizationId").asText();
             try {

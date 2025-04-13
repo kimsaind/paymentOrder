@@ -27,8 +27,7 @@
     "testCaseId": "TC_003",
     "description": "Create INSIDE payment order and query transaction history with generated trace",
     "requestTemplateKey": "inside",
-    "fromDate": "2025-04-10",
-    "toDate": "2025-04-10",
+
     "expectedStatusCode": 200,
     "expectedField": "responseData.transactions[0].transactionTraceNumber",
     "expectedValue": null,
@@ -40,8 +39,7 @@
     "testCaseId": "TC_004",
     "description": "Create IBFT payment order and query transaction history with generated trace",
     "requestTemplateKey": "ibft",
-    "fromDate": "2025-04-10",
-    "toDate": "2025-04-10",
+
     "expectedStatusCode": 200,
     "expectedField": "responseData.transactions[0].transactionTraceNumber",
     "expectedValue": null,
@@ -53,13 +51,45 @@
     "testCaseId": "TC_005",
     "description": "Create CITAD payment order and query transaction history with generated trace",
     "requestTemplateKey": "citad",
-    "fromDate": "2025-04-10",
-    "toDate": "2025-04-10",
+
     "expectedStatusCode": 200,
     "expectedField": "responseData.transactions[0].transactionTraceNumber",
     "expectedValue": null,
     "tags": ["positive", "payment", "history", "citad"],
     "testName": "Create_and_query_citad_transaction_trace",
     "apiType": "CREATE_AND_QUERY"
+  },
+  {
+    "testCaseId": "TC_006",
+    "testName": "Test Create Bulk Transaction",
+    "description": "Test creating a bulk transaction with multiple transaction types",
+    "apiType": "BULK_TRANSACTION",
+    "requestTemplateKey": "bulk-transaction-template",
+    "expectedStatusCode": 200,
+    "expectedField": "responseData.bulkTransaction.bulkStatus",
+    "expectedValue": "ORIG"
+  },
+  {
+    "testCaseId": "TC_007",
+    "testName": "Test Query Bulk Transaction with Fixed Value",
+    "description": "Test querying a bulk transaction with a fixed bulkTraceNumber",
+    "apiType": "GET_BULK_TRANSACTION",
+    "bulkTraceNumber": "pika4620294546",
+    "fromDate": "2025-04-11",
+    "toDate": "2025-04-11",
+    "expectedStatusCode": 200,
+    "expectedField": "responseData.bulkTransactions.bulkStatus",
+    "expectedValue": "COMP"
+  },
+  {
+    "testCaseId": "TC_008",
+    "testName": "Test Create and Query Bulk Transaction",
+    "description": "Test creating a bulk transaction and then querying it by bulkTraceNumber",
+    "apiType": "CREATE_AND_QUERY_BULK",
+    "requestTemplateKey": "bulk-transaction-template",
+    "expectedStatusCode": 200,
+    "expectedField": "responseData.bulkTransactions[0].bulkStatus",
+    "expectedValue": "COMP",
+    "waitTime": 15
   }
 ]
