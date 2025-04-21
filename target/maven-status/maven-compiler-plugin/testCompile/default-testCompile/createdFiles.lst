@@ -1,8 +1,0 @@
-com/example/tests/handlers/BulkTransactionHandler.class
-com/example/tests/utils/TestUtils.class
-com/example/tests/handlers/GetTransactionHandler.class
-com/example/tests/handlers/CreateAndQueryHandler.class
-com/example/tests/handlers/GetBulkTransactionHandler.class
-com/example/tests/handlers/CreateAndQueryBulkHandler.class
-com/example/tests/APITests.class
-com/example/tests/handlers/ApiTestHandler.class
